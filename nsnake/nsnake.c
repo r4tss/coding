@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-#define LENGTH(X)	(sizeof X / sizeof X[0])
 
 struct p {
 	int x;

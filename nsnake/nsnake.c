@@ -29,13 +29,20 @@ struct p rP() {
 	return p;
 }
 
+bool endGame(WINDOW * win) {
+	nodelay(win, 0);
+	mvwprintw(win, height / 2 , width / 2, "GAME OVER");
+	wrefresh(win);
+	wgetch(win);
+}
+
 int main()
 {
-	srand(time(0)); int score = 0;
+	srand(time(0));
 	struct p candy = rP();
 	struct p o = {width / 2, height / 2};
 	struct s s = { o, 0, 1}; //dir is 0 = down, 1 = up, 2 = left, 3 = right.
-	int key, n;
+	int key, n, i, a = 0, time = 200000, score = 0;
 	struct p pray[60];
 	bool exit = false;
 	
@@ -63,7 +70,7 @@ int main()
 					if(s.dir == 0 || s.dir == 1) { s.dir = 3; }
 					break;
 				case 27: //ESC
-					s.len++;
+					exit = true;
 				default:
 					break;
 			}
@@ -82,17 +89,25 @@ int main()
 					s.p.x+=2;
 					break;
 			}
-			if (s.p.y == height-1) { s.p.y = 1; }
-			if (s.p.y == 0) { s.p.y = height-1;}
-			if (s.p.x >= width-1) { s.p.x = 2; }
-			if (s.p.x <= 0) { s.p.x = width-2; }
+			if (s.p.y >= height-1 || s.p.y <= 0 || s.p.x >= width-1 || s.p.x <= 0) { endGame(win); exit = true; }
+			for (i = 2; i < s.len + 1; i++) {
+				if(s.p.x == pray[i].x && s.p.y == pray[i].y) {
+					endGame(win); exit = true;
+					break;
+				}
+			}
+		//	if (s.p.y == height-1) { s.p.y = 1; }
+		//	if (s.p.y == 0) { s.p.y = height-1;}
+		//	if (s.p.x >= width-1) { s.p.x = 2; }
+		//	if (s.p.x <= 0) { s.p.x = width-2; }
 			if (s.p.x == candy.x && s.p.y == candy.y) {
 				candy = rP();
 				score += 100;
+				a += 1000;
+				time = time - score * 5;
 				s.len++;
 			}
 			wclear(win);
-			box(win, 0, 0);
 			for ( n = s.len; n > 0; n--) {
 				pray[0] = s.p;
 				pray[n] = pray[n-1];
@@ -100,18 +115,10 @@ int main()
 			}
 			mvwprintw(win, s.p.y, s.p.x, "@");
 			mvwprintw(win, candy.y, candy.x, "#");
+			box(win, 0, 0);
 			mvwprintw(win, 0, 45, " Score: %i ", score);
-			for (int i = 2; i < s.len + 1; i++) {
-				if(s.p.x == pray[i].x && s.p.y == pray[i].y) {
-					nodelay(win, 0);
-					mvwprintw(win, height / 2 , width / 2, "GAME OVER");
-					wrefresh(win);
-					wgetch(win);
-					exit = true;
-				}
-			}
 			wrefresh(win);
-			usleep(200000);
+			usleep(time);
 	}
 	endwin();
 	return 0;

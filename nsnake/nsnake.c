@@ -47,9 +47,10 @@ int main()
 	bool exit = false;
 	
 	initscr();
+	int sx = (COLS - width) / 2, sy = (LINES - height) / 2;
 	curs_set(0);
 	noecho();
-	WINDOW * win = newwin(height, width, 0, 0);
+	WINDOW * win = newwin(height, width, sy, sx);
 	nodelay(win, 1);
 	refresh();
 

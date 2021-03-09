@@ -4,7 +4,7 @@
 
 #define PORT	8888
 
-int main()
+void hostGame()
 {
 	int sfd, err = 0;
 	struct sockaddr_in addr;
@@ -30,6 +30,4 @@ int main()
 		printf("Failed to listen");
 	else
 		printf("Listening...\n");
-
-	return 0;
 }

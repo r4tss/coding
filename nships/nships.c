@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "server.c"
+
 #define height 	80
 #define width	200
 
@@ -71,5 +73,6 @@ int menu(int y, int x, int h, int w, int aLen, char it[][15])
 
 int main() 
 {
-	
+	if(fork())
+		hostGame();
 }

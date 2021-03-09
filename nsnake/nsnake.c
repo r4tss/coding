@@ -41,12 +41,14 @@ struct items {
         char items[3][15];
 };
 
-int menu(int y, int x, int h, int w, int aLen, char it[][15])
+int menu(int y, int x, int h, int w, int aLen, char it[][15], char *title)
 {
         int key, i, c = 0, o = 0;
         WINDOW * menu = newwin(h, w, y, x);
         refresh();
         box(menu, 0, 0);
+	if(title != 0)
+		mvwprintw(menu, 0, 1, "%s", title);
         while(o == 0)
         {
                 for(i = 0; i < aLen; ++i) {
@@ -93,8 +95,9 @@ int main()
 	struct p o = {width / 2, height / 2};
 	struct s s = { o, 0, 1}; //dir is 0 = down, 1 = up, 2 = left, 3 = right.
 	struct items sit = {2, {"Play Game", "Exit"}};
-	int key, n, i, a = 0, time = 200000, score = 0, state = 0;
 	struct p pray[60];
+	int key, n, i, a = 0, time = 200000, score = 0, state = 0;
+	char title[12] = "nsnake";
 	bool exit = false;
 	
 	initscr();
@@ -111,9 +114,7 @@ int main()
 		{
 			case 0:	//Start menu state
 				nodelay(win, 0);
-				mvwprintw(win, (height / 2) - 10, (width / 2) - 15, "nsnake");
-				wrefresh(win);
-				state = menu((LINES - 15) / 2, (COLS - 10) / 2, 10, 15, sit.len, sit.items);
+				state = menu((LINES - 15) / 2, (COLS - 10) / 2, 10, 15, sit.len, sit.items, title);
 				if(state == 0) {
 					state = 1;
 				} else if(state == 1) {

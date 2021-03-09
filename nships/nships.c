@@ -28,12 +28,14 @@ struct items {
         char items[3][15];
 };
 
-int menu(int y, int x, int h, int w, int aLen, char it[][15])
+int menu(int y, int x, int h, int w, int aLen, char it[][15], char title)
 {
         int key, i, c = 0, o = 0;
         WINDOW * menu = newwin(h, w, y, x);
         refresh();
         box(menu, 0, 0);
+	if(title != 0)
+		mvwprintw(menu, 0, 1, "%s", title);
         while(o == 0)
         {
                 for(i = 0; i < aLen; ++i) {
@@ -73,6 +75,5 @@ int menu(int y, int x, int h, int w, int aLen, char it[][15])
 
 int main() 
 {
-	if(fork())
-		hostGame();
+
 }

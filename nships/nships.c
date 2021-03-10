@@ -31,9 +31,8 @@ struct p rP() {
 
 struct player {
 	struct p p;
-	int id;
 	int ships;
-	char name[15];
+	char name[1024];
 };
 
 struct items {
@@ -96,10 +95,19 @@ void getstrwin(char * ip, char *title)
 	refresh();
 	mvwprintw(getip, 0, 1, title);
 	wmove(getip, 1, 1);
-	wgetnstr(getip, str, 13);
+	wgetnstr(getip, str, 18);
 	strncpy(ip, str, 128);
 	delwin(getip);
 	noecho();
+}
+
+void gameWin(int x, struct player p) 
+{
+	WINDOW * gWin = newwin(30, 45, 0, x);
+	refresh();
+	box(gWin, 0, 0);
+	mvwprintw(gWin, 0, 1, p.name);
+	wrefresh(gWin);
 }
 
 int main() 
@@ -112,18 +120,18 @@ int main()
 	initscr();
 	curs_set(0);
 	noecho();
-	WINDOW * g = newwin(100, 200, (LINES - 100) / 2, (COLS - 200) / 2);
+	WINDOW * g = newwin(100, 300, (LINES - 100) / 2, (COLS - 200) / 2);
 	refresh();
 	while(e == 0)
 	{
 		switch(state)
 		{
-			case 0:
+			case 0:	//Start menu
 				state = menu((LINES - 5) / 2, (COLS - 15) / 2, 5, 15, start.len, start.items, title) + 1;
 				if(state == 3)
 					state = 4;
 				break;
-			case 1:
+			case 1:	//Host menu
 				clear();
 				printw("Waiting for client to connect");
 				refresh();
@@ -136,10 +144,15 @@ int main()
 				else {
 					host = 1;
 					getstrwin(p1.name, "Enter your name");
-					state = 4;
+					clear();
+					printw("Waiting for response from client");
+					refresh();
+					send(sfd, p1.name, sizeof(p1.name), 0);
+					recv(sfd, p2.name, sizeof(p2.name), 0);
+					state = 3;
 				}
 				break;
-			case 2:
+			case 2:	//Client menu
 				getstrwin(ip, ipTitle);
 				sfd = joinGame(ip);
 				clear();
@@ -150,20 +163,29 @@ int main()
 				else {
 					host = 0;
 					getstrwin(p2.name, "Enter your name");
-					state = 4;
+					clear();
+					printw("Waiting for response from host");
+					refresh();
+					recv(sfd, p1.name, sizeof(p1.name), 0);
+					send(sfd, p2.name, sizeof(p2.name), 0);
+					state = 3;
 				}
 				break;
-			case 3:
+			case 3: //Game loop
+				clear();
+				gameWin(45, p2);
+				gameWin(0, p1);
+				refresh();
+				getch();
 				state = 4;
 				break;
-			case 4:
+			case 4:	//Exit state
 				e = 1;
 				break;
 		}
 		refresh();
 	}
-	if(sfd != 0)
-		close(sfd);
+	close(sfd);
 
 	endwin();
 	return 0;

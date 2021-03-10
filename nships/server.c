@@ -1,13 +1,6 @@
-#include <stdio.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <string.h>
-
 #define PORT	8888
 
-void hostGame()
+int hostGame()
 {
 	int sfd, cfd, len, err = 0;
 	struct sockaddr_in addr, cli;
@@ -18,39 +11,26 @@ void hostGame()
 
 	err = (sfd = socket(AF_INET, SOCK_STREAM, 0));
 	if(err == -1)
-		printf("Failed to create socket\n");
-	else
-		printf("Created socket\n");
+		return 0;
 
 	err = bind(sfd, (struct sockaddr*)&addr, sizeof(addr));
 	if(err == -1)
-		printf("Failed to bind\n");
-	else
-		printf("Binded to socket\n");
+		return 0;
 	
 	err = listen(sfd, 2);
 	if(err == -1)
-		printf("Failed to listen");
-	else
-		printf("Listening...\n");
+		return 0;
 
 	len = sizeof(cli);
 
 	cfd = accept(sfd, (struct sockaddr*)&cli, &len);
 	if(cfd < 0)
-		printf("Failed to accept connection");
-	else
-		printf("Accepted client\n");
-	
-	char buff[2048];
-	
-	read(cfd, buff, 2048);
-	printf("%s", buff);
+		return 0;
 
-	close(sfd);
+	return cfd;
 }
 
-void joinGame(char *ip)
+int joinGame(char *ip)
 {
 	int sfd, err = 0;
 	struct sockaddr_in addr;
@@ -62,18 +42,11 @@ void joinGame(char *ip)
 
 	err = (sfd = socket(AF_INET, SOCK_STREAM, 0));
 	if(err == -1)
-		printf("Failed to create socket\n");
-	else
-		printf("Created socket\n");
+		return 0;
 
 	err = (connect(sfd, (struct sockaddr*)&addr, sizeof(addr)));
 	if(err == -1)
-		printf("Failed to connect to server\n");
-	else
-		printf("Connected to server...\n");
+		return 0;
 
-	send(sfd, buff, strlen(buff), 0);
-	printf("Sent message!\n");
-
-	close(sfd);
+	return sfd;
 } 

@@ -1,13 +1,16 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
 
 #define PORT	8888
 
 void hostGame()
 {
-	int sfd, cfd, err = 0;
-	struct sockaddr_in addr;
+	int sfd, cfd, len, err = 0;
+	struct sockaddr_in addr, cli;
 
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -31,18 +34,27 @@ void hostGame()
 	else
 		printf("Listening...\n");
 
-	cfd = accpet(sfd, (struct sockaddr*)&)
+	len = sizeof(cli);
 
-	for(;;) 
-	{
-		read(sfd, )
-	}
+	cfd = accept(sfd, (struct sockaddr*)&cli, &len);
+	if(cfd < 0)
+		printf("Failed to accept connection");
+	else
+		printf("Accepted client\n");
+	
+	char buff[2048];
+	
+	read(cfd, buff, 2048);
+	printf("%s", buff);
+
+	close(sfd);
 }
 
-void joinGame(char ip)
+void joinGame(char *ip)
 {
 	int sfd, err = 0;
 	struct sockaddr_in addr;
+	char buff[2048];
 
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = inet_addr(ip);
@@ -59,4 +71,9 @@ void joinGame(char ip)
 		printf("Failed to connect to server\n");
 	else
 		printf("Connected to server...\n");
-}
+
+	send(sfd, buff, strlen(buff), 0);
+	printf("Sent message!\n");
+
+	close(sfd);
+} 

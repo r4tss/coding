@@ -75,5 +75,5 @@ int menu(int y, int x, int h, int w, int aLen, char it[][15], char title)
 
 int main() 
 {
-
+	hostGame();
 }

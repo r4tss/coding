@@ -23,12 +23,19 @@ struct p rP() {
 	return p;
 }
 
+struct player {
+	struct p p;
+	int id;
+	int ships;
+	char name[15];
+};
+
 struct items {
         int len;
         char items[3][15];
 };
 
-int menu(int y, int x, int h, int w, int aLen, char it[][15], char title)
+int menu(int y, int x, int h, int w, int aLen, char it[][15], char *title)
 {
         int key, i, c = 0, o = 0;
         WINDOW * menu = newwin(h, w, y, x);
@@ -75,5 +82,34 @@ int menu(int y, int x, int h, int w, int aLen, char it[][15], char title)
 
 int main() 
 {
-	hostGame();
+	struct player p1, p2, hostID;
+	struct items start = {3, {"Host Game", "Join Game", "Exit"}};
+	int state = 0;
+	char title[15] = "nships";
+	bool exit = false;
+
+	initscr();
+	noecho();
+	while(!exit)
+	{
+		switch(state)
+		{
+			case 0:
+				state = menu((LINES - 15) / 2, (COLS - 10) / 2, 5, 15, start.len, start.items, title);
+				if(state == 0)
+					state = 1;
+					break;
+				if(state == 1)
+					state = 2;
+					break;
+				if(state == 2)
+					exit = true;
+				break;
+			case 1:
+				hostID = fork()
+				break;
+			case 2:
+				break;
+		}
+	}
 }

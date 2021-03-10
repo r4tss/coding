@@ -74,7 +74,7 @@ int menu(int y, int x, int h, int w, int aLen, char it[][15], char *title)
                                 o = 1;
                                 break;
                         case 27:
-                                o = 2;
+                                o = le2;
                                 break;
 			default:
 				break;
@@ -117,10 +117,11 @@ int main()
 				state = menu((LINES - 15) / 2, (COLS - 10) / 2, 10, 15, sit.len, sit.items, title);
 				if(state == 0) {
 					state = 1;
+					break;
 				} else if(state == 1) {
 					exit = true;
+					break;
 				}
-				break;
 			case 1: //Play state
 				nodelay(win, 1);
 				switch(key = wgetch(win))

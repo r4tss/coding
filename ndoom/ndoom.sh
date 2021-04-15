@@ -8,7 +8,7 @@ x=3
 y=3
 dx=0
 dy=0
-a=2
+a=9
 quit=0
 stepX=0
 stepY=0
@@ -26,7 +26,7 @@ map=(	1 1 1 1 1 1 1 1 \
 	1 0 0 0 0 0 0 1 \ 
 	1 1 1 1 1 1 1 1 )
 
-function dd {
+function rr {
 	if [ $1 -eq 0 ]
 	then
 		ox=$2
@@ -43,22 +43,42 @@ function dd {
 }
 
 function dir {
-	if [ $(echo "$1 < ($PI * 0.5)" | bc) -eq 1 ]
+	if [ $(echo "$a < 0" | bc) -eq 1 ]
+	then
+		ab=$(echo "$a - ($PI * 2)" | bc)
+	else
+		ab=$a
+	fi
+	ax=$a
+	ay=$(echo "($PI * 0.5) - $a" | bc)
+	if [ $(echo "$1 > 0" | bc) -eq 1 ] && [ $(echo "$1 < ($PI * 0.5)" | bc) -eq 1 ]
 	then
 		stepX=1
 		stepY=1
+		ax=$ab
+		ay=$(echo "(PI * 0.5) - ab" | bc)
 	elif [ $(echo "$1 > ($PI * 0.5)" | bc -l) -eq 1 ] && [ $(echo "$1 < $PI" | bc -l) -eq 1 ]
 	then
 		stepX=-1
 		stepY=1
+		ax=$(echo "$PI - $ab" | bc)
+		oy=$(echo "$ab - ($PI * 0.5)" | bc)
 	elif [ $(echo "$1 > $PI" | bc -l) -eq 1 ] && [ $(echo "$1 < ($PI * 1.5)" | bc -l) -eq 1 ]
 	then
 		stepX=-1
 		stepY=-1
+		ax=$(echo "$ab - $PI" | bc)
+		ay=$(echo "($PI * 1.5) - $ab" | bc)
 	else
 		stepX=1
 		stepY=-1
+		ax=$(echo "($PI * 2) - $ab" | bc)
+		ay=$(echo "$ab - ($PI * 1.5)" | bc)
 	fi
+}
+
+function check_arr {
+
 }
 
 #while [ $h -lt $sh ]
@@ -75,17 +95,39 @@ function dir {
 
 while [ !$quit ]
 do
-#	while [ !$(echo "$sa == $ba" | bc) ]
-#	do
-	#	hit=0
-	#	ra=$(echo "$a + $sa" | bc)
-	#	dir $ra
-	#	dx=$(dd 0 $x)
-	#	dy=$(dd 1 $y)
-	#	sideX=$(echo "if ($x > $dx) $x - $dx else $dx - $x" | bc)
-	#	sideY=$(echo "if ($y > $dy) $y - $dy else $dy - $y" | bc)
-		sa=$(echo "$sD + ($PI / 180)" | bc -l)
-	#	echo $sideX
-#	done
+	rc=0
+	rx=$(rr 0 $x)
+	ry=$(rr 1 $y)
+	sideX=$(echo "$x - $rx" | bc)
+	sideY=$(echo "$y - $ry" | bc)
+	while [ $rc -lt 61 ]
+	do
+		hit=0
+		rlc=0
+		ra=$(echo "$a + $sa" | bc)
+		dir $ra
+		dx=$(echo "1 / (s($ax) / c($ax))" | bc -l)
+		dy=$(echo "1 / (s($ay) / c($ay))" | bc -l)
+		#echo $stepX $stepY
+		while [ $rlc -lt 2 ]
+		do
+			a=$(echo "$rx + ($mapSize * $ry)" | bc)
+			echo $a $rx $ry
+			if [ $rc -eq 0 ]
+			then
+				rx=$(echo "if ($stepX==1) ($x / 1) + 1 else $x / 1" | bc)
+				ry=$(echo "if ($stepY==1) ($y / 1) + 1 else $y / 1" | bc)
+				((rlc++))
+			elif [ ${map[@]} -eq 1 ]
+			then
+				hit=1
+				((rlc++))
+			else
+				rx=$(echo "")
+			fi
+		done
+		sa=$(echo "$sa + ($PI / 180)" | bc -l)
+		(( rc++ ))
+	done
 	break
 done

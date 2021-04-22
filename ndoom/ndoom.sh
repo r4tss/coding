@@ -1,30 +1,22 @@
-#!/bin/ksh93
+#!/bin/zsh
 readonly PI=3.1415926535897932384626
 sw=10
 sh=5
 w=0
 h=0
-x=3
-y=3
+x=4
+y=4
 dx=0
 dy=0
-a=9
+a=2
 quit=0
 stepX=0
 stepY=0
-sa=$(echo "($PI / 6) * -1" | bc -l)
-ba=$(echo "$PI / 6" | bc -l)
+sa=$(echo "($PI / 4) * -1" | bc -l)
+ba=$(echo "$PI / 4" | bc -l)
 
 mapSize=8
-map=(	1 1 1 1 1 1 1 1 \ 
-	1 0 0 0 0 0 0 1 \ 
-	1 0 0 0 0 0 0 1 \ 
-	1 0 0 0 0 0 0 1 \ 
-	1 0 0 0 0 0 0 1 \ 
-	1 0 0 0 0 0 0 1 \ 
-	1 0 0 0 0 0 0 1 \ 
-	1 0 0 0 0 0 0 1 \ 
-	1 1 1 1 1 1 1 1 )
+map=(1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1)
 
 function rr {
 	if [ $1 -eq 0 ]
@@ -43,91 +35,65 @@ function rr {
 }
 
 function dir {
-	if [ $(echo "$a < 0" | bc) -eq 1 ]
-	then
-		ab=$(echo "$a - ($PI * 2)" | bc)
-	else
-		ab=$a
-	fi
-	ax=$a
-	ay=$(echo "($PI * 0.5) - $a" | bc)
+	ab=$1
 	if [ $(echo "$1 > 0" | bc) -eq 1 ] && [ $(echo "$1 < ($PI * 0.5)" | bc) -eq 1 ]
 	then
 		stepX=1
-		stepY=1
+		stepY=-1
 		ax=$ab
-		ay=$(echo "(PI * 0.5) - ab" | bc)
+		ay=$(echo "($PI * 0.5) - $ab" | bc)
 	elif [ $(echo "$1 > ($PI * 0.5)" | bc -l) -eq 1 ] && [ $(echo "$1 < $PI" | bc -l) -eq 1 ]
 	then
 		stepX=-1
-		stepY=1
+		stepY=-1
 		ax=$(echo "$PI - $ab" | bc)
-		oy=$(echo "$ab - ($PI * 0.5)" | bc)
+		ay=$(echo "$ab - ($PI * 0.5)" | bc)
 	elif [ $(echo "$1 > $PI" | bc -l) -eq 1 ] && [ $(echo "$1 < ($PI * 1.5)" | bc -l) -eq 1 ]
 	then
 		stepX=-1
-		stepY=-1
+		stepY=1
 		ax=$(echo "$ab - $PI" | bc)
 		ay=$(echo "($PI * 1.5) - $ab" | bc)
 	else
 		stepX=1
-		stepY=-1
+		stepY=1
 		ax=$(echo "($PI * 2) - $ab" | bc)
 		ay=$(echo "$ab - ($PI * 1.5)" | bc)
 	fi
 }
 
-function check_arr {
-
-}
-
-#while [ $h -lt $sh ]
+#while [ !$quit ]
 #do
-#	while [ $w -lt $sw ]
-#	do
-#		echo -n '#'
-#		((w++))
-#	done
-#	echo -ne '\n'
-#	((h++))
-#	w=0
-#done
-
-while [ !$quit ]
+echo -n > distances
+rc=0
+while [ $rc -lt 91 ]
 do
-	rc=0
 	rx=$(rr 0 $x)
 	ry=$(rr 1 $y)
-	sideX=$(echo "$x - $rx" | bc)
-	sideY=$(echo "$y - $ry" | bc)
-	while [ $rc -lt 61 ]
+	hit=0
+	ra=$(echo "a=($a + $sa); if (a<0) a + ($PI * 2) else a" | bc)
+	dir $ra
+	dx=$(echo "a=(1 / (s($ax) / c($ax))); if (a>1) $stepX else a" | bc -l)
+	dy=$(echo "a=(1 / (s($ay) / c($ay))); if (a>1) $stepY else a" | bc -l)
+	rlc=0
+	rx=$(echo "if ($stepX==1) ($x / 1) + 1 else $x / 1" | bc)
+	ry=$(echo "if ($stepY==-1) ($y / 1) + 1 else $y / 1" | bc)
+	while [ $hit -eq 0 ]
 	do
-		hit=0
-		rlc=0
-		ra=$(echo "$a + $sa" | bc)
-		dir $ra
-		dx=$(echo "1 / (s($ax) / c($ax))" | bc -l)
-		dy=$(echo "1 / (s($ay) / c($ay))" | bc -l)
-		#echo $stepX $stepY
-		while [ $rlc -lt 2 ]
-		do
-			a=$(echo "$rx + ($mapSize * $ry)" | bc)
-			echo $a $rx $ry
-			if [ $rc -eq 0 ]
-			then
-				rx=$(echo "if ($stepX==1) ($x / 1) + 1 else $x / 1" | bc)
-				ry=$(echo "if ($stepY==1) ($y / 1) + 1 else $y / 1" | bc)
-				((rlc++))
-			elif [ ${map[@]} -eq 1 ]
-			then
-				hit=1
-				((rlc++))
-			else
-				rx=$(echo "")
-			fi
-		done
-		sa=$(echo "$sa + ($PI / 180)" | bc -l)
-		(( rc++ ))
+		if [ ${map[$(echo "$rx + ($mapSize * $ry)" | bc)]} -eq 1 ]
+		then
+			hit=1
+		else
+			rx=$(echo "$rx + $dx" | bc)
+			ry=$(echo "$ry + $dy" | bc)
+		fi
 	done
-	break
+	sideX=$(echo "if($rx>$x) $rx - $x else $x - $rx" | bc)
+	sideY=$(echo "if($ry>$y) $ry - $y else $y - $ry" | bc)
+	echo "$(echo "sqrt(($sideX * $sideX) + ($sideY * $sideY))" | bc) " >> distances
+	sa=$(echo "$sa + ($PI / 180)" | bc -l)
+	(( rc++ ))
 done
+#./draw.sh
+#	break
+#done

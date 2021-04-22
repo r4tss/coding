@@ -90,6 +90,7 @@ void getstrwin(char * ip, char *title)
 {
 	char str[80];
 	echo();
+	
 	WINDOW * getip = newwin(3, 20, (LINES - 3) / 2, (COLS - 20) / 2);
 	box(getip, 0, 0);
 	refresh();
@@ -101,33 +102,65 @@ void getstrwin(char * ip, char *title)
 	noecho();
 }
 
-void gameWin(int x, struct player p) 
+struct p getPlace(struct p p, WINDOW * w)
 {
-	WINDOW * gWin = newwin(30, 45, 0, x);
-	refresh();
-	box(gWin, 0, 0);
-	mvwprintw(gWin, 0, 1, p.name);
-	wrefresh(gWin);
+	p.x = 1;
+	p.y = 1;
+	int e = 0;
+	curs_set(1);
+	for(;;)
+	{
+		switch(getch())
+		{
+			case 119: // up
+				if(p.y > 1)
+					--p.y;
+				break;
+			case 115: // down
+				if(p.y < 10)
+					++p.y;
+				break;
+			case 97: // left
+				if(p.x > 1)
+					--p.x;
+				break;
+			case 100: // right
+				if(p.x < 10)
+					++p.x;
+				break;
+			case 10:
+				e = 1;
+				break;
+		}
+		wmove(w, p.y, p.x);
+		wrefresh(w);
+		if(e == 1)
+			break;
+	}
+	curs_set(0);
+	return p;
 }
 
 int main() 
 {
 	struct player p1, p2;
+	struct p p1p[256], p2p[256];
 	struct items start = {3, {"Host Game", "Join Game", "Exit"}};
-	int state = 0, e = 0, sfd, host;
-	char title[15] = "nships", nameTitle[20] = "Enter Name", ipTitle[20] = "Enter IP", ip[128];
+	int state = 0, e = 0, sfd, round = 0, host, p0i = 0, p2i = 0;
+	char ip[128];
 
 	initscr();
 	curs_set(0);
 	noecho();
-	WINDOW * g = newwin(100, 300, (LINES - 100) / 2, (COLS - 200) / 2);
+	WINDOW * p1w = newwin(30, 45, 1, 0);
+	WINDOW * p2w = newwin(30, 45, 1, 45);
 	refresh();
 	while(e == 0)
 	{
 		switch(state)
 		{
 			case 0:	//Start menu
-				state = menu((LINES - 5) / 2, (COLS - 15) / 2, 5, 15, start.len, start.items, title) + 1;
+				state = menu((LINES - 5) / 2, (COLS - 15) / 2, 5, 15, start.len, start.items, "nships") + 1;
 				if(state == 3)
 					state = 4;
 				break;
@@ -153,7 +186,7 @@ int main()
 				}
 				break;
 			case 2:	//Client menu
-				getstrwin(ip, ipTitle);
+				getstrwin(ip, "Enter IP");
 				sfd = joinGame(ip);
 				clear();
 				if(sfd == 0) {
@@ -173,11 +206,44 @@ int main()
 				break;
 			case 3: //Game loop
 				clear();
-				gameWin(45, p2);
-				gameWin(0, p1);
 				refresh();
-				getch();
-				state = 4;
+				box(p1w, 0, 0);
+				box(p2w, 0, 0);
+				mvwprintw(p1w, 0, 1, p1.name);
+				mvwprintw(p2w, 0, 1, p2.name);
+				if(host == 0)
+					wmove(p1w, 0, 0);
+				else
+					wmove(p2w, 0, 0);
+				wrefresh(p1w);
+				wrefresh(p2w);
+				switch(round)
+				{
+					case 0:
+						if(host == 0) {
+							p2p[p2i] = getPlace(p2.p, p2w);
+							send(sfd, p2p[p2i], sizeof(p2p[p2i]), 0);
+						}
+						else {
+							printw("%s's turn", p2.name);
+							recv(sfd, p2p[p2i], sizeof(p2p[p2i]), 0);
+						}
+						++p2i;
+						round = 1;
+						break;
+					case 1:
+						if(host == 1) {
+							p1p[p1i] = getPlace(p1.p, p1w);
+							send(sfd, p1p[p1i], sizeof(p1p[p1i]), 0);
+						}
+						else {
+							printw("%s's turn", p1.name);
+							recv(sfd, p1p[p1i], sizeof(p1p[p1i]), 0);
+						}
+						++p1i;
+						round = 0;
+						break;
+				}
 				break;
 			case 4:	//Exit state
 				e = 1;

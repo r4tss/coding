@@ -29,11 +29,26 @@ struct p rP() {
 	return p;
 }
 
-bool endGame(WINDOW * win) {
+int endGame(WINDOW * win) {
 	nodelay(win, 0);
-	mvwprintw(win, height / 2 , width / 2, "GAME OVER");
+	mvwprintw(win, height / 2, (width / 2) - 5, "GAME OVER");
+	mvwprintw(win, (height / 2) + 1, (width / 2) - 9, "Press r to restart");
+	mvwprintw(win, (height / 2) + 2, (width / 2) - 13, "or enter to go to the main menu");
 	wrefresh(win);
-	wgetch(win);
+	for(;;)
+	{
+		switch(wgetch(win))
+		{
+			case 114:
+				return 2;
+				break;
+			case 10:
+				//wclear(win);
+				//wrefresh(win);
+				return 0;
+				break;
+		}
+	}
 }
 
 struct items {
@@ -62,19 +77,21 @@ int menu(int y, int x, int h, int w, int aLen, char it[][15], char *title)
                 }
                 switch(key = wgetch(menu))
                 {
+			case 259:
                         case 119:
                                 if(c > 0)
                                         --c;
                                 break;
+			case 258:
                         case 115:
-                                if(c < aLen)
+                                if(c < aLen - 1)
                                         ++c;
                                 break;
                         case 10:
                                 o = 1;
                                 break;
                         case 27:
-                                o = le2;
+                                o = 2;
                                 break;
 			default:
 				break;
@@ -94,9 +111,9 @@ int main()
 	struct p candy = rP();
 	struct p o = {width / 2, height / 2};
 	struct s s = { o, 0, 1}; //dir is 0 = down, 1 = up, 2 = left, 3 = right.
-	struct items sit = {2, {"Play Game", "Exit"}};
+	struct items sit = {3, {"Play Game", "Guide", "Exit"}};
 	struct p pray[60];
-	int key, n, i, a = 0, time = 200000, score = 0, state = 0;
+	int key, n, i, a = 0, time = 200000, score = 0, state = 0, effect = 0;
 	char title[12] = "nsnake";
 	bool exit = false;
 	
@@ -114,11 +131,17 @@ int main()
 		{
 			case 0:	//Start menu state
 				nodelay(win, 0);
+				wclear(win);
+				wrefresh(win);
+				//mvprintw(LINES - 1, 0, "W, A, S, D to navigate     Press enter to select     Esc to quit");
 				state = menu((LINES - 15) / 2, (COLS - 10) / 2, 10, 15, sit.len, sit.items, title);
 				if(state == 0) {
 					state = 1;
 					break;
 				} else if(state == 1) {
+					state = 3;
+					break;
+				} else if(state == 2) {
 					exit = true;
 					break;
 				}
@@ -158,10 +181,10 @@ int main()
 						s.p.x+=2;
 						break;
 				}
-				if (s.p.y >= height-1 || s.p.y <= 0 || s.p.x >= width-1 || s.p.x <= 0) { endGame(win); exit = true; }
+				if (s.p.y >= height-1 || s.p.y <= 0 || s.p.x >= width-1 || s.p.x <= 0) { state = endGame(win);/* exit = true; */ break; }
 				for (i = 2; i < s.len + 1; i++) {
 					if(s.p.x == pray[i].x && s.p.y == pray[i].y) {
-						endGame(win); exit = true;
+						state = endGame(win);// exit = true;
 						break;
 					}
 				}
@@ -175,6 +198,7 @@ int main()
 					a += 1000;
 					time = time - score * 5;
 					s.len++;
+					effect = rand() % 9;
 				}
 				wclear(win);
 				for ( n = s.len; n > 0; n--) {
@@ -189,6 +213,15 @@ int main()
 				wrefresh(win);
 				usleep(time);
 				break;
+			case 2: //Reset game
+				s.dir = 0; s.p = o; s.len = 1; a = 0; time = 200000; score = 0; state = 1; effect = 0;
+				break;
+			case 3:
+				wclear(win);
+				mvwprintw(win, 5, (width / 2) - 3, "Guide\nWelcome to nsnake!\nThis is an ncurses implementation of the popular game snake.\n\nTo move in nsnake use the WASD or arrow keys.\nYou can pause the game by pressing escape and select things by pressing enter.\n\nThe goal of the game is to keep the snake alive and get as many points as possible.\nYou achieve this by picking up the candies which are repersented by hashtags(#).\nTo keep the snake alive do not run into walls or yourself as this will kill snake.\n\nWhen you pick up a candy you will recieve one of five random effects, these effects include:\n   double speed\n   double points\n   ghost\n   big head\n   portal");
+				wrefresh(win);
+				wgetch(win);
+				state = 0;
 		}
 	}
 	endwin();

@@ -40,6 +40,13 @@ struct items {
         char items[3][15];
 };
 
+struct ship {
+	struct p p;
+	int dir;
+	int len;
+	int live;
+}
+
 int menu(int y, int x, int h, int w, int aLen, char it[][15], char *title)
 {
         int key, i, c = 0, o = 0;
@@ -141,12 +148,60 @@ struct p getPlace(struct p p, WINDOW * w)
 	return p;
 }
 
+struct ship setPlace(struct ship s, WINDOW * w)
+{
+	s.p.x = 1;
+	s.p.y = 1;
+	int e = 0;
+	curs_set(1);
+	for(;;)
+	{
+		switch(getch())
+		{
+			case 119:
+				if(s.p.y > 1)
+					s.p.y--;
+				break;
+			case 115:
+				if(s.p.y < 10)
+					s.p.y++;
+				break;
+			case 97:
+				if(s.p.x > 1)
+					s.p.x--;
+				break;
+			case 100:
+				if(s.p.x < 10)
+					s.p.x++;
+				break;
+			case 114:
+				if(s.dir == 3)
+					s.dir = 0;
+				else
+					s.dir++;
+				break;
+			case 82:
+				if(s.dir == 0)
+					s.dir = 3;
+				else
+					s.dir--;
+			case 10:
+				e = 1;
+				break;
+		}
+		wmove(w, s.p.y, s.p.x);
+		wrefresh(w);
+		if(e == 1)
+			break;
+	}
+}
+
 int main() 
 {
 	struct player p1, p2;
 	struct p p1p[256], p2p[256];
 	struct items start = {3, {"Host Game", "Join Game", "Exit"}};
-	int state = 0, e = 0, sfd, round = 0, host, p0i = 0, p2i = 0;
+	int state = 0, e = 0, sfd, round = 0, host, p0i = 0, p2i = 0, phase = 0;
 	char ip[128];
 
 	initscr();
@@ -217,31 +272,45 @@ int main()
 					wmove(p2w, 0, 0);
 				wrefresh(p1w);
 				wrefresh(p2w);
-				switch(round)
+				switch(phase)
 				{
-					case 0:
-						if(host == 0) {
-							p2p[p2i] = getPlace(p2.p, p2w);
-							send(sfd, p2p[p2i], sizeof(p2p[p2i]), 0);
+					case 0: // Choose ship locations
+						switch(host)
+						{
+							case 0:
+								break;
+							case 1:
+								break;
 						}
-						else {
-							printw("%s's turn", p2.name);
-							recv(sfd, p2p[p2i], sizeof(p2p[p2i]), 0);
-						}
-						++p2i;
-						round = 1;
 						break;
-					case 1:
-						if(host == 1) {
-							p1p[p1i] = getPlace(p1.p, p1w);
-							send(sfd, p1p[p1i], sizeof(p1p[p1i]), 0);
+					case 1: // Play the game
+						switch(round)
+						{
+							case 0:
+								if(host == 0) {
+									p2p[p2i] = getPlace(p2.p, p2w);
+									send(sfd, p2p[p2i], sizeof(p2p[p2i]), 0);
+								}
+								else {
+									printw("%s's turn", p2.name);
+									recv(sfd, p2p[p2i], sizeof(p2p[p2i]), 0);
+								}
+								++p2i;
+								round = 1;
+								break;
+							case 1:
+								if(host == 1) {
+									p1p[p1i] = getPlace(p1.p, p1w);
+									send(sfd, p1p[p1i], sizeof(p1p[p1i]), 0);
+								}
+								else {
+									printw("%s's turn", p1.name);
+									recv(sfd, p1p[p1i], sizeof(p1p[p1i]), 0);
+								}
+								++p1i;
+								round = 0;
+								break;
 						}
-						else {
-							printw("%s's turn", p1.name);
-							recv(sfd, p1p[p1i], sizeof(p1p[p1i]), 0);
-						}
-						++p1i;
-						round = 0;
 						break;
 				}
 				break;
@@ -252,7 +321,6 @@ int main()
 		refresh();
 	}
 	close(sfd);
-
 	endwin();
 	return 0;
 }

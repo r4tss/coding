@@ -11,7 +11,7 @@ function a { #input format: distance, height, invert
 		b="#"
 	elif [ $H -gt 20 ]
 	then
-		b="-"
+		b="/"
 	else
 		b=" "
 	fi

@@ -5,13 +5,13 @@ height=0
 
 echo ${distance[1]}
 
-function a { #input format: distance, height, invert
-	if [ $(echo "$(sed -n $(echo $((W + 1))p) distances) < ($height * 0.75)" | bc) -eq 1 ]
+function a {
+	if [ $(echo "$(sed -n $(echo $((W + 1))p) distances) < ($height)" | bc) -eq 1 ]
 	then
 		b="#"
 	elif [ $H -gt 20 ]
 	then
-		b="-"
+		b="/"
 	else
 		b=" "
 	fi
@@ -22,14 +22,20 @@ do
 	echo
 	while [ $W -lt 91 ]
 	do
-		a
-		if [ $W -eq 90 ]
+		if [ $H -eq 0 ]
 		then
-			echo $b
+			echo -n $W
+			echo -n " "
 		else
-			echo -n $b
+			a
+			if [ $W -eq 90 ]
+			then
+				echo $b
+			else
+				echo -n $b
+			fi
+			echo -n " "
 		fi
-		echo -n " "
 		((W++))
 	done
 	((H++))

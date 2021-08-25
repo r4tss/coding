@@ -24,7 +24,6 @@ do
 	do
 		if [ $H -eq 0 ]
 		then
-			echo -n $W
 			echo -n " "
 		else
 			a

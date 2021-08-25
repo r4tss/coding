@@ -134,10 +134,10 @@ int main()
 	WINDOW * hw = newwin(7, 16, sy + (height/2) - 5, sx + width + 3);
 	box(hw, 0, 0);
 	mvwprintw(hw, 0, 2, " Highscores ");
-	for(i=0;i<5;++i)
-	{
-		mvwprintw(hw, i+1, 1, "%s", )
-	}
+	//for(i=0;i<5;++i)
+	//{
+	//	mvwprintw(hw, i+1, 1, "%s", )
+	//}
 	wrefresh(hw);
 	while(!exit)
 	{

@@ -3,6 +3,7 @@
 int main()
 {
 	initscr();
+	keypad(stdscr, TRUE);
 	int c;
 	c = getch();
 	printf("%i", c);

@@ -190,7 +190,7 @@ struct ship setPlace(WINDOW * w, int len)
 				else {
 					s.dir = 0;
 					if(s.p.x + s.len > ww - 5)
-						s.p.x = s.p.x - (s.p.x + s.len - ww) - ;
+						s.p.x = s.p.x - (s.p.x + s.len - ww) - 2;
 				}
 				break;
 			case 10:

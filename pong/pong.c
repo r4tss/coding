@@ -150,11 +150,11 @@ int main(int argc, char ** argv) {
 		SDL_Delay(1);
 		
 		if(checkCollision(ball, p1) == true || checkCollision(ball, p2) == true){
-			ballvelx = -ballvelx * 1.1;
+			ballvelx = -ballvelx * 1.5;
 		}
 
 		if(ball.y <= 0 || ball.y >= 740){
-			ballvely = -ballvely * 1.1;
+			ballvely = -ballvely * 1.5;
 		}
 
 		if(ball.x <= 0){

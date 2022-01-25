@@ -29,7 +29,6 @@ struct p rP() {
 }
 
 struct player {
-	struct p p;
 	int ships;
 	char name[1024];
 };
@@ -108,10 +107,9 @@ void getstrwin(char * ip, char *title)
 	noecho();
 }
 
-struct p getPlace(struct p p, WINDOW * w)
+struct p getPlace(WINDOW * w)
 {
-	p.x = 1;
-	p.y = 1;
+	struct p p = {2, 1};
 	int e = 0, wh, ww;
 	curs_set(1);
 	getmaxyx(w, wh, ww);
@@ -130,12 +128,12 @@ struct p getPlace(struct p p, WINDOW * w)
 					++p.y;
 				break;
 			case 97: // left
-				if(p.x > 1)
-					--p.x;
+				if(p.x > 2)
+					p.x-=2;
 				break;
 			case 100: // right
-				if(p.x < ww - 2)
-					++p.x;
+				if(p.x < ww - 3)
+					p.x+=2;
 				break;
 			case 10:
 				e = 1;
@@ -152,7 +150,7 @@ struct p getPlace(struct p p, WINDOW * w)
 
 struct ship setPlace(WINDOW * w, int len)
 {
-	struct ship s = {{1, 1}, 0, len, 1};
+	struct ship s = {{2, 1}, 0, len, 1};
 	int e = 0, wh, ww;
 	char character[64];
 	curs_set(0);
@@ -172,25 +170,30 @@ struct ship setPlace(WINDOW * w, int len)
 					s.p.y++;
 				break;
 			case 97:
-				if(s.p.x > 1)
+				if(s.p.x > 2)
 					s.p.x-=2;
 				break;
 			case 100:
-				if(s.dir == 0 && s.p.x < ww - s.len - 5)
+				if(s.dir == 0 && s.p.x < ww - s.len - (s.len + 1))
 					s.p.x+=2;
-				else if(s.dir == 1 && s.p.x < ww - 2)
+				else if(s.dir == 1 && s.p.x < ww - 3)
 					s.p.x+=2;
 				break;
 			case 114:
 				if(s.dir == 0) {
 					s.dir = 1;
-					if(s.p.y + s.len > wh)
+					if(s.p.y + s.len > wh - s.len)
 						s.p.y = s.p.y - (s.p.y + s.len - wh) - 1;
 				}
 				else {
 					s.dir = 0;
+<<<<<<< HEAD
 					if(s.p.x + s.len > ww - 5)
 						s.p.x = s.p.x - (s.p.x + s.len - ww) - 2;
+=======
+					if(s.p.x + s.len > ww - s.len)
+						s.p.x = s.p.x - (s.p.x + s.len - ww) - (s.len + 1);
+>>>>>>> origin/main
 				}
 				break;
 			case 10:
@@ -199,7 +202,6 @@ struct ship setPlace(WINDOW * w, int len)
 		}
 		wclear(w);
 		box(w, 0, 0);
-		mvwprintw(w, 0, 0, "%i, %i", s.p.x, ww - s.len - 2);
 		for(int l=0;l<s.len;++l)
 		{
 			if(s.dir == 0) {
@@ -225,22 +227,23 @@ struct ship setPlace(WINDOW * w, int len)
 		if(e == 1)
 			break;
 	}
+	return s;
 }
 
 int main() 
 {
 	struct player p1, p2;
-	struct p p1p[256], p2p[256];
 	struct items start = {3, {"Host Game", "Join Game", "Exit"}};
 	struct ship p1s[5], p2s[5];
-	int state = 3, e = 0, sfd, round = 0, host, p1i = 0, p2i = 0, phase = 0, l;
+	struct p p1p[248], p2p[248];
+	int state = 0, e = 0, sfd, round = 0, host, p1i = 0, p2i = 0, phase = 0, l, buffer;
 	char ip[128];
 
 	initscr();
 	curs_set(0);
 	noecho();
-	WINDOW * p1w = newwin(12, 22, 1, 0);
-	WINDOW * p2w = newwin(12, 22, 1, 22);
+	WINDOW * p1w = newwin(12, 23, 1, 0);
+	WINDOW * p2w = newwin(12, 23, 1, 23);
 	refresh();
 	while(e == 0)
 	{
@@ -302,12 +305,14 @@ int main()
 					wmove(p1w, 0, 0);
 				else
 					wmove(p2w, 0, 0);
+				// Draw ships depending on host or not
+				// switch(host)
 				wrefresh(p1w);
 				wrefresh(p2w);
 				switch(phase)
 				{
 					case 0: // Choose ship locations
-						for(int s=0;s<6;++s)
+						for(int s=0;s<5;++s)
 						{
 							if(s < 3)
 								l = 3;
@@ -318,10 +323,24 @@ int main()
 							switch(host)
 							{
 								case 0:
-									setPlace(p2w, l);
+									p2s[s] = setPlace(p2w, l);
 									break;
 								case 1:
-									setPlace(p1w, l);
+									p1s[s] = setPlace(p1w, l);
+									break;
+							}
+						}
+						for(int s=0;s<5;++s)
+						{
+							switch(host)
+							{
+								case 0:
+									//send to p1
+									//recieve p1
+									break;
+								case 1:
+									//recieve p2
+									//send to p2
 									break;
 							}
 						}
@@ -332,19 +351,23 @@ int main()
 						{
 							case 0:
 								if(host == 0) {
-									p2p[p2i] = getPlace(p2.p, p2w);
-									//send(sfd, p2p[p2i], sizeof(p2p[p2i]), 0);
+									p2p[p2i] = getPlace(p1w);
+									send(sfd, &p2p[p2i].x, sizeof(p2p[p2i].x), 0);
+									send(sfd, &p2p[p2i].y, sizeof(p2p[p2i].y), 0);
 								}
 								else {
 									printw("%s's turn", p2.name);
-									//recv(sfd, p2p[p2i], sizeof(p2p[p2i]), 0);
+									recv(sfd, &p2p[p2i].x, 128, 0);
+									recv(sfd, &p2p[p2i].y, 128, 0);
+									mvwprintw(p1w, 0, 0, "%i %i", p2p[p2i].x, p2p[p2i].y);
+									getch();
 								}
 								++p2i;
 								round = 1;
 								break;
 							case 1:
 								if(host == 1) {
-									p1p[p1i] = getPlace(p1.p, p1w);
+									p1p[p1i] = getPlace(p2w);
 									//send(sfd, p1p[p1i], sizeof(p1p[p1i]), 0);
 								}
 								else {
